@@ -10,6 +10,8 @@ namespace GrapheApp
     {
         private Graphe graphe;
         private Button btnGenerer;
+        private Button btnCompterBFS;
+        private Button btnCompterDFS;
         private Noeud noeudSelectionne1;
         private Noeud noeudSelectionne2;
         private List<Noeud> cheminCourt;
@@ -29,6 +31,25 @@ namespace GrapheApp
             AjouterDonnees();
             this.Refresh();
         }
+        private void btnCompterBFS_Click(object sender, EventArgs e)
+        {
+            int nombreSousGraphes = graphe.CompterSousGraphesConnexesBFS();
+            MessageBox.Show($"Le nombre de sous-graphes connexes (BFS) est : {nombreSousGraphes}");
+
+            this.Refresh();
+        }
+
+
+        private void btnCompterDFS_Click(object sender, EventArgs e)
+        {
+            int nombreSousGraphes = graphe.CompterSousGraphesConnexesDFS();
+
+            MessageBox.Show($"Le nombre de sous-graphes connexes (DFS) est : {nombreSousGraphes}");
+
+            this.Refresh();
+        }
+
+
 
         private void DessinerGraphe(object sender, PaintEventArgs e)
         {
@@ -62,6 +83,38 @@ namespace GrapheApp
 
         private void InitializeComponent()
         {
+            
+            
+
+            // Ajout des boutons pour BFS et DFS pour compter les sous-graphes connexes
+            this.btnCompterBFS = new System.Windows.Forms.Button();
+            this.btnCompterDFS = new System.Windows.Forms.Button();
+
+            // Bouton BFS pour compter les sous-graphes
+            this.btnCompterBFS.Location = new System.Drawing.Point(25, 25);
+            this.btnCompterBFS.Name = "btnCompterBFS";
+            this.btnCompterBFS.Size = new System.Drawing.Size(120, 40);
+            this.btnCompterBFS.BackColor = Color.LightGreen;
+            this.btnCompterBFS.Font = new Font("Arial", 10, FontStyle.Bold);
+            this.btnCompterBFS.Text = "Compter BFS";
+            this.btnCompterBFS.Click += new EventHandler(this.btnCompterBFS_Click);
+            //this.btnCompterBFS.Click += new EventHandler(this.btnCompterBFS_Click);
+
+            // Bouton DFS pour compter les sous-graphes
+            this.btnCompterDFS.Location = new System.Drawing.Point(25, 75);
+            this.btnCompterDFS.Name = "btnCompterDFS";
+            this.btnCompterDFS.Size = new System.Drawing.Size(120, 40);
+            this.btnCompterDFS.BackColor = Color.LightCoral;
+            this.btnCompterDFS.Font = new Font("Arial", 10, FontStyle.Bold);
+            this.btnCompterDFS.Text = "Compter DFS";
+            this.btnCompterDFS.Click += new EventHandler(this.btnCompterDFS_Click);
+            //this.btnCompterDFS.Click += new EventHandler(this.btnCompterDFS_Click);
+
+            // Ajout des boutons à la fenêtre
+            this.Controls.Add(this.btnCompterBFS);
+            this.Controls.Add(this.btnCompterDFS);
+
+
             this.btnGenerer = new System.Windows.Forms.Button();
             this.SuspendLayout();
 
@@ -128,6 +181,90 @@ namespace GrapheApp
             noeuds = new List<Noeud>();
             liens = new List<Lien>();
         }
+        public int CompterSousGraphesConnexesBFS()
+        {
+            int sousGraphesConnexes = 0;
+            var noeudsVisites = new HashSet<Noeud>();
+
+            foreach (var noeud in noeuds)
+            {
+                if (!noeudsVisites.Contains(noeud))
+                {
+                    // Si le noeud n'a pas été visité, lancer BFS à partir de ce noeud
+                    BFS(noeud, noeudsVisites);
+                    sousGraphesConnexes++;
+                }
+            }
+
+            return sousGraphesConnexes;
+        }
+
+        private void BFS(Noeud noeudInitial, HashSet<Noeud> noeudsVisites)
+        {
+            Queue<Noeud> fileAttente = new Queue<Noeud>();
+            fileAttente.Enqueue(noeudInitial);
+            noeudsVisites.Add(noeudInitial);
+
+            while (fileAttente.Count > 0)
+            {
+                var noeudActuel = fileAttente.Dequeue();
+
+                // Explorer tous les voisins non visités du noeud actuel
+                foreach (var lien in liens.Where(l => l.Noeud1 == noeudActuel || l.Noeud2 == noeudActuel))
+                {
+                    Noeud voisin = lien.Noeud1 == noeudActuel ? lien.Noeud2 : lien.Noeud1;
+                    if (!noeudsVisites.Contains(voisin))
+                    {
+                        noeudsVisites.Add(voisin);
+                        fileAttente.Enqueue(voisin);
+                    }
+                }
+            }
+        }
+
+        public int CompterSousGraphesConnexesDFS()
+        {
+            int sousGraphesConnexes = 0;
+            var noeudsVisites = new HashSet<Noeud>();
+
+            foreach (var noeud in noeuds)
+            {
+                if (!noeudsVisites.Contains(noeud))
+                {
+                    // Si le noeud n'a pas été visité, lancer DFS à partir de ce noeud
+                    DFS(noeud, noeudsVisites);
+                    sousGraphesConnexes++;
+                }
+            }
+
+            return sousGraphesConnexes;
+        }
+
+        private void DFS(Noeud noeudInitial, HashSet<Noeud> noeudsVisites)
+        {
+            Stack<Noeud> pile = new Stack<Noeud>();
+            pile.Push(noeudInitial);
+            noeudsVisites.Add(noeudInitial);
+
+            while (pile.Count > 0)
+            {
+                var noeudActuel = pile.Pop();
+
+                // Explorer tous les voisins non visités du noeud actuel
+                foreach (var lien in liens.Where(l => l.Noeud1 == noeudActuel || l.Noeud2 == noeudActuel))
+                {
+                    Noeud voisin = lien.Noeud1 == noeudActuel ? lien.Noeud2 : lien.Noeud1;
+                    if (!noeudsVisites.Contains(voisin))
+                    {
+                        noeudsVisites.Add(voisin);
+                        pile.Push(voisin); // Empiler les voisins pour les explorer
+                    }
+                }
+            }
+        }
+
+
+
 
         public void AjouterNoeud(int id)
         {
